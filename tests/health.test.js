@@ -1,0 +1,1 @@
+const test=require('node:test');const assert=require('node:assert/strict');const {handler}=require('../netlify/functions/health');test('health responde HTTP 200 y status ok',async()=>{const r=await handler();assert.equal(r.statusCode,200);assert.deepEqual(JSON.parse(r.body),{status:'ok'});});
