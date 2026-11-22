@@ -1,18 +1,82 @@
-# Proyecto CI/CD — Netlify
-Caso de estudio: sitio estático y función serverless de salud, desplegados con GitHub Actions.
+# Proyecto CI/CD con GitHub Actions y Netlify
 
-## Ejecutar localmente
-Requiere Node.js 22. Ejecuta `bash scripts/setup.sh` y `bash scripts/test.sh`.
+Caso de estudio académico de liberación y despliegue continuos para un sitio HTML estático y una función serverless de salud.
 
-## Configuración de Netlify y GitHub
-1. Crea un repositorio en GitHub y sube este proyecto a `main`.
-2. Crea un sitio en Netlify (puede ser un sitio de despliegue manual). Obtén el **Site ID** en la configuración del sitio y genera un **personal access token** en Netlify.
-3. En GitHub, abre **Settings > Secrets and variables > Actions** y añade `NETLIFY_SITE_ID` y `NETLIFY_AUTH_TOKEN`. No escribas sus valores en archivos.
-4. Haz un push a `main`: GitHub Actions ejecuta pruebas y build, luego publica con Netlify CLI si todo pasa. Los pull requests solo ejecutan pruebas.
-5. Abre `https://TU-SITIO.netlify.app/api/health` y comprueba `{ "status": "ok" }`.
-6. Evita conectar otro autodespliegue del mismo repositorio en Netlify: aquí el despliegue lo controla GitHub Actions.
+## Alcance
 
-## Responsables
-1: líder/documento; 2: entorno; 3: pipeline; 4: pruebas; 5: despliegue; 6: SLA; 7: métricas.
+El proyecto demuestra el flujo completo sin incorporar frameworks, base de datos ni autenticación:
 
-**Nota:** Este repositorio no crea automáticamente el sitio ni los secretos en cuentas externas.
+```text
+pull request → instalación → pruebas → build → merge a main → pruebas → despliegue
+```
+
+- GitHub almacena el código y los pull requests.
+- GitHub Actions valida los cambios y controla la liberación.
+- Netlify publica el sitio y la función serverless.
+- `/api/health` debe responder HTTP 200 con `{"status":"ok"}`.
+
+## Requisitos
+
+- Git y Bash.
+- Node.js 22 y npm.
+- Repositorio de GitHub con Actions habilitado.
+- Sitio de Netlify, únicamente para el despliegue remoto.
+
+## Ejecución local
+
+Desde la raíz del proyecto:
+
+```bash
+bash scripts/setup.sh
+bash scripts/test.sh
+```
+
+También pueden ejecutarse los comandos npm por separado:
+
+```bash
+npm test
+npm run build
+```
+
+El build genera `dist/index.html`. La carpeta `dist/` es un artefacto local y no se versiona.
+
+## Comportamiento del pipeline
+
+- En cada pull request, el job `test` instala, prueba y construye el proyecto.
+- En cada push a `main`, el job `test` se ejecuta nuevamente.
+- El job `deploy` depende de `test` y solo se ejecuta en `main` cuando `DEPLOY_ENABLED` es `true`.
+- Los secretos de Netlify se entregan únicamente al paso de despliegue.
+
+## Configuración de GitHub y Netlify
+
+1. Crea un sitio vacío en Netlify sin habilitar otro autodespliegue del mismo repositorio.
+2. Obtén el Site ID y genera un personal access token de Netlify.
+3. En GitHub, abre **Settings → Secrets and variables → Actions**.
+4. Crea los secretos `NETLIFY_SITE_ID` y `NETLIFY_AUTH_TOKEN`.
+5. Cuando scripts, pruebas y workflow estén integrados, crea la variable `DEPLOY_ENABLED` con valor `true`.
+6. Fusiona un pull request real en `main` y comprueba los jobs `test` y `deploy`.
+7. Abre la URL pública y verifica `/api/health`.
+
+Nunca escribas tokens, IDs reales ni otros datos de acceso en archivos, capturas o comentarios.
+
+## Organización del equipo
+
+| Integrante | Responsabilidad |
+|---|---|
+| 1 | Liderazgo, justificación, README y reporte final |
+| 2 | Entorno de liberación |
+| 3 | Pipeline de GitHub Actions |
+| 4 | Pruebas automatizadas |
+| 5 | Configuración y despliegue en Netlify |
+| 6 | Niveles de servicio |
+| 7 | Métricas y parámetros de configuración |
+
+Las instrucciones y ramas asignadas se encuentran en [`guias-equipo/00_GUIA_GENERAL.md`](guias-equipo/00_GUIA_GENERAL.md).
+
+## Documentación
+
+- Justificación: [`docs/01-justificacion.md`](docs/01-justificacion.md).
+- Reporte consolidado: [`docs/reporte.md`](docs/reporte.md).
+- URL pública: pendiente de la configuración final de Netlify.
+
+El reporte final reunirá los documentos del equipo y las evidencias reales de GitHub Actions y Netlify. Los resultados pendientes se indicarán como tales; no se inventarán mediciones.
