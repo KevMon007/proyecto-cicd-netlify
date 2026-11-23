@@ -1,0 +1,51 @@
+# 04. Métricas y Monitoreo
+
+## 1. Definición de métricas
+
+| Métrica | Qué mide | Unidad | Fuente | Forma de obtención |
+| :--- | :--- | :--- | :--- | :--- |
+| **Estado HTTP y cuerpo de `/api/health`** | Disponibilidad funcional del endpoint de salud (`netlify/functions/health.js`). | Código de estado HTTP (`200`) y JSON (`{"status":"ok"}`) | Endpoint `/api/health` en Netlify | Petición HTTP `GET` mediante `curl` al endpoint desplegado. |
+| **Disponibilidad de la muestra** | Proporción de solicitudes exitosas (`HTTP 200` con cuerpo esperado) respecto al total de peticiones ejecutadas en la prueba. | Porcentaje (`%`) y razón (`éxitos / total`) | Muestra de 5 solicitudes HTTP hacia `/api/health` | Cálculo `(solicitudes exitosas / 5) * 100` a partir de la ejecución del script de muestreo con `curl`. |
+| **Latencia de respuesta** | Tiempo total transcurrido desde el inicio de la solicitud hasta recibir la respuesta completa de `/api/health`. | Segundos (`s`) o milisegundos (`ms`) | Cliente HTTP (`curl`) hacia Netlify | Variable `%{time_total}` de `curl` en cada una de las 5 peticiones de la muestra. |
+| **Resultado y duración de GitHub Actions** | Estado final de ejecución de los *jobs* (`test` y `deploy`) y el tiempo empleado en completar el flujo de CI/CD. | Estado (`success` / `failure` / `skipped`) y tiempo (`m` / `s`) | Pestaña **Actions** del repositorio en GitHub (`CI-CD Netlify`) | Consulta directa del resumen y registro de ejecución del workflow en GitHub Actions. |
+| **Resultado del deploy de Netlify** | Estado de publicación del directorio `dist` y las funciones *serverless* en el entorno productivo de Netlify. | Estado (`Published` / `Failed` / `Pending`) | Panel **Deploys** de Netlify y salida del paso `scripts/deploy.sh` | Revisión del log del *job* `deploy` en GitHub Actions y del historial de *Deploys* en Netlify. |
+
+---
+
+## 2. Procedimiento de muestreo sobre `/api/health`
+
+Una vez habilitado el despliegue y disponible la URL pública en Netlify, se ejecutan cinco solicitudes consecutivas con tiempo límite de 15 segundos:
+
+```bash
+for i in 1 2 3 4 5; do
+  curl --max-time 15 -sS -o /dev/null -w "HTTP %{http_code} | %{time_total}s\n" [https://SITIO.netlify.app/api/health](https://SITIO.netlify.app/api/health)
+done
+```
+
+> **Alcance estadístico:** Cinco peticiones describen únicamente una muestra puntual de verificación post-despliegue; no representan disponibilidad mensual ni una latencia percentil (`p95`) estable.
+
+---
+
+## 3. Registro de resultados
+
+### A. Muestra de `/api/health`
+* **Fecha de medición:** *Pendiente (en espera de URL de despliegue en Netlify)*
+* **URL evaluada:** `https://SITIO.netlify.app/api/health` *(Pendiente)*
+
+| Petición | Estado HTTP | Cuerpo esperado (`{"status":"ok"}`) | Latencia (`time_total`) | Resultado |
+| :---: | :---: | :---: | :---: | :---: |
+| 1 | Pendiente | Pendiente | Pendiente | Pendiente |
+| 2 | Pendiente | Pendiente | Pendiente | Pendiente |
+| 3 | Pendiente | Pendiente | Pendiente | Pendiente |
+| 4 | Pendiente | Pendiente | Pendiente | Pendiente |
+| 5 | Pendiente | Pendiente | Pendiente | Pendiente |
+
+* **Éxitos / Total:** `Pendiente (0/5 ejecutadas)`
+* **Disponibilidad de la muestra:** `Pendiente`
+* **Latencia mínima / promedio / máxima de la muestra:** `Pendiente`
+
+### B. Ejecución de GitHub Actions y Deploy en Netlify
+* **Workflow:** `CI-CD Netlify` (`.github/workflows/`)
+* **Resultado de GitHub Actions (`test` / `deploy`):** `Pendiente de ejecución final tras merge a main`
+* **Duración de GitHub Actions:** `Pendiente`
+* **Resultado del deploy en Netlify:** `Pendiente (requiere DEPLOY_ENABLED == "true" en main)`
